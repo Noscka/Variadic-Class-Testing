@@ -2,6 +2,20 @@
 #include <fcntl.h>
 #include <io.h>
 #include <string>
+#include <thread>
+
+template <typename F, typename ... ArgsT>
+void StartThread(F&& callable, ArgsT&& ... args)
+{
+    (*callable)(this, std::forward<ArgsT>(args)...);
+}
+
+void function(Foo* param, std::wstring input, int SomeTing)
+{
+    std::wcout << L"Running" << std::endl;
+    std::wcout << L"Number: " << SomeTing << std::endl;
+    param->String = input;
+}
 
 class Foo
 {
@@ -11,16 +25,11 @@ public:
     template <typename F, typename ... ArgsT>
     Foo(F&& callable, ArgsT&& ... args)
     {
-        (*callable)(this, std::forward<ArgsT>(args)...);
+        std::thread(function, std::forward<ArgsT>(args)...);
     }
 };
 
-void function(Foo* param, std::wstring input, int SomeTing)
-{
-    std::wcout << L"Running" << std::endl;
-    std::wcout << L"Number: " << SomeTing << std::endl;
-    param->String = input;
-}
+
 
 int main()
 {
