@@ -5,34 +5,36 @@
 #include <thread>
 #include <functional>
 
-/* For calling in class */
+/*
+Project for testing Variadic Templates, Callable Templates, passing template variables and threading with template variables
+It isn't made for effiency as I made it to test different functions and etc for another project (Console Loading Screen)
+which doesn't just use the constructor
+*/
+
 class Foo
 {
 public:
-  /* just function, compiling error */
-    template <typename F>
-    Foo(F& callable)
-    {
-        /* First try */
-        std::thread namedThread(callable, 2);
-        namedThread.join();
-
-        /* Second try (both aren't here at once btw) */
-        //std::thread namedThread([&](F&& Fuction) { std::bind(callable, 2); }, callable);
-        //namedThread.detach();
-    }
-
-    /* Trying both typename callable with Variadic parameters */
     template <typename F, typename ... ArgsT>
     Foo(F&& callable, ArgsT&& ... args)
     {
-        //std::thread namedThread([&](typename std::decay<F>::type&& Fuction, typename std::decay<ArgsT>::type&&... args) { std::bind(Fuction, args...); }, std::forward<F>(callable), std::forward<ArgsT>(args)...);
-        std::thread namedThread(callable, std::forward<ArgsT>(args)...);
-        namedThread.join();
+        StartThreadFunction(std::forward<F>(callable), std::forward<ArgsT>(args)...);
+    }
+
+    template <typename F, typename ... ArgsT>
+    void StartThreadFunction(F&& callable, ArgsT&& ... args)
+    {
+        std::thread([this](F&& callable, ArgsT&& ... args) { this->StartThread(callable, std::forward<ArgsT>(args)...); }, callable, std::forward<ArgsT>(args)...).join();
+        
+    }
+
+    template <typename F, typename ... ArgsT>
+    void StartThread(F&& callable, ArgsT&& ... args)
+    {
+        (*callable)(this, std::forward<ArgsT>(args)...);
     }
 };
 
-void functionToThread(int SomeTing)
+void functionToThread(Foo* pointerObject, int SomeTing)
 {
     std::wcout << L"Running" << std::endl;
     std::wcout << L"Number: " << SomeTing << std::endl;
@@ -42,14 +44,6 @@ void functionToThread(int SomeTing)
 int main()
 {
     _setmode(_fileno(stdout), _O_U16TEXT);
-    //Foo FooTing1(functionToThread);
-    Foo FooTing2(&functionToThread, 3);
+    Foo FooTest(&functionToThread, 3);
     return 0;
 }
-
-
-//template <typename F, typename ... ArgsT>
-//void StartThread(F&& callable, ArgsT&& ... args)
-//{
-//    (*callable)(this, std::forward<ArgsT>(args)...);
-//}
